@@ -1,0 +1,554 @@
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Document</title>
+        <link rel="stylesheet" href="https://unpkg.com/swiper@8/swiper-bundle.min.css" />
+        <link rel="stylesheet" href="slider/slider-style.css">
+        <link rel="stylesheet" href="style.css">
+
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-LN+7fdVzj6u52u30Kp6M/trliBMCMKTyK833zpbD+pXdCLuTusPj697FH4R/5mcr" crossorigin="anonymous">
+            <script src="https://cdn.tailwindcss.com"></script>
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+            
+            <style>
+                /* Estilos para el modal */
+                .modal-overlay {
+                    display: none;
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background-color: rgba(0, 0, 0, 0.7);
+                    z-index: 1000;
+                    justify-content: center;
+                    align-items: center;
+                    padding: 20px;
+                }
+                
+                .modal-content {
+                    background-color: white;
+                    border-radius: 10px;
+                    max-width: 800px;
+                    width: 100%;
+                    max-height: 90vh;
+                    overflow-y: auto;
+                    position: relative;
+                    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+                    animation: modalFadeIn 0.3s ease-out;
+                }
+                
+                @keyframes modalFadeIn {
+                    from { opacity: 0; transform: translateY(-50px); }
+                    to { opacity: 1; transform: translateY(0); }
+                }
+                
+                .modal-header {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    padding: 20px;
+                    border-bottom: 1px solid #eee;
+                }
+                
+                .modal-title {
+                    font-size: 1.5rem;
+                    font-weight: bold;
+                    margin: 0;
+                }
+                
+                .modal-close {
+                    background: none;
+                    border: none;
+                    font-size: 1.5rem;
+                    cursor: pointer;
+                    color: #666;
+                }
+                
+                .modal-body {
+                    padding: 20px;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 20px;
+                }
+                
+                @media (min-width: 768px) {
+                    .modal-body {
+                        flex-direction: row;
+                    }
+                }
+                
+                .modal-image {
+                    flex: 1;
+                    display: flex;
+                    justify-content: center;
+                }
+                
+                .modal-image img {
+                    max-width: 100%;
+                    max-height: 300px;
+                    object-fit: contain;
+                    border-radius: 8px;
+                }
+                
+                .modal-details {
+                    flex: 1;
+                }
+                
+                .modal-description {
+                    margin-bottom: 15px;
+                    line-height: 1.6;
+                }
+                
+                .modal-price {
+                    font-size: 1.25rem;
+                    font-weight: bold;
+                    color: #8B4513;
+                    margin-bottom: 15px;
+                }
+                
+                .modal-footer {
+                    padding: 20px;
+                    border-top: 1px solid #eee;
+                    display: flex;
+                    justify-content: flex-end;
+                    gap: 10px;
+                }
+                
+                .modal-btn {
+                    padding: 10px 20px;
+                    border: none;
+                    border-radius: 5px;
+                    cursor: pointer;
+                    font-weight: bold;
+                    transition: background-color 0.3s;
+                }
+                
+                .modal-btn-primary {
+                    background-color: #8B4513;
+                    color: white;
+                }
+                
+                .modal-btn-primary:hover {
+                    background-color: #6d3710;
+                }
+                
+                .modal-btn-secondary {
+                    background-color: #f0f0f0;
+                    color: #333;
+                }
+                
+                .modal-btn-secondary:hover {
+                    background-color: #e0e0e0;
+                }
+                
+                /* Estilo para las tarjetas de productos */
+                .card {
+                    cursor: pointer;
+                    transition: transform 0.3s, box-shadow 0.3s;
+                }
+                
+                .card:hover {
+                    transform: translateY(-5px);
+                    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+                }
+            </style>
+    </head>
+    <body>
+        <header class="header" id="home">
+                <!--Logo -->
+                <a href="#" class="logo">
+                    <img src="img/1000025958 2.png" alt="">
+                </a>
+
+                <!-- menu do nav-bar -->
+                <nav class="navbar">
+                    <a href="#home">Home</a>
+                    <a href="#produtos">Produtos</a>
+                    <a href="#sobre">Sobre</a>
+                    <a href="#contato">Contato</a>
+                </nav>
+                <!--Icones-->
+                <div class="icons">
+                    <div class="fas fa-shopping-cart" id="cart-btn">
+                        <span id="cart-badge" class="cart-badge">0</span>
+                    </div>
+                    <div class="fas fa-bars" id="menu-btn" ></div>
+                </div>
+
+                <!-- cart-itens -->
+                <div class="cart-items-container" id="cart-modal">
+                <div id="cart-items-list">
+                    </div>
+                <div class="cart-empty" id="cart-empty">
+                    <p>Seu carrinho está vazio</p>
+                </div>
+                <div class="cart-total" id="cart-total" style="display: none;">
+                    <h3>Total: R$ <span id="total-price">0,00</span></h3>
+                </div>
+                <a href="#" class="botao" id="checkout-btn" style="display: none;">Fazer Orçamento</a>
+            </div>
+        </header>
+        
+        <section id="trading">
+            <div class="conatiner">
+                <div class="swiper container-slider">
+                    <div class="swiper-wrapper">
+                        <!-- incio -->
+                        <div class="swiper-slide container-slide">
+                            <div class="container-slide-img">
+                                <img src="img/bolsa-beatriz.png" alt="">
+                            </div>
+                        </div>
+                        <!-- fim -->
+                        <!-- incio -->
+                        <div class="swiper-slide container-slide">
+                            <div class="container-slide-img">
+                                <img src="img/bolsa-lucilia.png" alt="">
+                            </div>
+                        </div>
+                        <!-- fim -->
+                        <!-- incio -->
+                        <div class="swiper-slide container-slide">
+                            <div class="container-slide-img">
+                                <img src="img/kit_bolsas.png" alt="">
+                            </div>
+                        </div>
+                        <!-- fim -->
+                        <!-- incio -->
+                        <div class="swiper-slide container-slide">
+                            <div class="container-slide-img">
+                                <img src="img/bolsa1.png" alt="">
+                            </div>
+                        </div>
+                        <!-- fim -->
+                        <!-- incio -->
+                        <div class="swiper-slide container-slide">
+                            <div class="container-slide-img">
+                                <img src="img/bolsa_luis_otavio.png" alt="">
+                            </div>
+                        </div>
+                        <!-- fim -->
+                        <!-- incio -->
+                        <div class="swiper-slide container-slide">
+                            <div class="container-slide-img">
+                                <img src="img/bolsa-luca-sombra.png" alt="">
+                            </div>
+                        </div>
+                        <!-- fim -->
+                    </div>
+                    <div class="tranding-slider-control">
+                    <div class="swiper-button-prev slider-arrow">
+                    <ion-icon name="arrow-back-outline"></ion-icon>
+                    </div>
+                    <div class="swiper-button-next slider-arrow">
+                    <ion-icon name="arrow-forward-outline"></ion-icon>
+                    </div>
+                    <div class="swiper-pagination"></div>
+                </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Item fav start -->
+        <div class="container-bolsas">
+                <div class="item left-bg">
+                    <img src="img/bolsa-beatriz-sombra.png" alt="Bolsa com inicial M" class="img-hover">
+                </div>
+                <br>
+                <br>
+                <div class="item right-bg">
+                    <img src="img/bolsa1-sombra.png" alt="Bolsa com nome Beatriz" class="img-hover">
+                </div>
+        </div>
+        <!-- Item Fav end -->
+
+        <!-- Produtos -->
+        <div id="produtos">
+            <div id="maternidade" class="itens">
+                <div class="container-item">
+                    <div class="card" data-product-id="1">
+                        <img src="img-items/bolsa-cecilia.jpeg" alt="Bolsa Maternidade Cecília" class="img-card">
+                        <div class="card-body">
+                            <h3>Bolsa Maternidade Cecília</h3>
+                            <p>Elegancia y practicidad para la mamá moderna.</p>
+                            <button class="btn btn-primary" onclick="openModal('1'); event.stopPropagation();">
+                                Fazer pedido
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card" data-product-id="2">
+                        <img src="img-items/kit-luis-otavio.jpeg" alt="Kit Completo Luís Otávio" class="img-card">
+                        <div class="card-body">
+                            <h3>Kit Completo Luís Otávio</h3>
+                            <p>Conjunto de bolsa, cambiador y accesorios esenciales.</p>
+                            <button class="btn btn-primary" onclick="openModal('2'); event.stopPropagation();">
+                                Fazer pedido
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card" data-product-id="3">
+                        <img src="img-items/kit-lucca.jpeg" alt="Kit Completo Lucca" class="img-card">
+                        <div class="card-body">
+                            <h3>Kit Completo Lucca</h3>
+                            <p>Organización y estilo para el cuidado del recién nacido.</p>
+                            <button class="btn btn-primary" onclick="openModal('3'); event.stopPropagation();">
+                                Fazer pedido
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card" data-product-id="4">
+                        <img src="img-items/kit-lucca.jpeg" alt="Kit Completo Lucca" class="img-card">
+                        <div class="card-body">
+                            <h3>Kit Completo Lucca</h3>
+                            <p>Organización y estilo para el cuidado del recién nacido.</p>
+                            <button class="btn btn-primary" onclick="openModal('3'); event.stopPropagation();">
+                                Fazer pedido
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card" data-product-id="5">
+                        <img src="img-items/kit-lucca.jpeg" alt="Kit Completo Lucca" class="img-card">
+                        <div class="card-body">
+                            <h3>Kit Completo Lucca</h3>
+                            <p>Organización y estilo para el cuidado del recién nacido.</p>
+                            <button class="btn btn-primary" onclick="openModal('3'); event.stopPropagation();">
+                                Fazer pedido
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="necessarie" class="itens">
+                <div class="container-item">
+                    <div class="card" data-product-id="6">
+                        <img src="img-items/WhatsApp Image 2025-09-16 at 09.51.42.jpeg" alt="" class="img-card" id="img-card">
+                        <div class="card-body">
+                            <h3>Necessaire Floral</h3>
+                            <p></p>
+                            <button class="btn btn-primary" id="btn-finalizar">
+                                Fazer pedido
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card" data-product-id="7">
+                        <img src="img-items/WhatsApp Image 2025-09-24 at 22.41.21.jpeg" alt="" class="img-card" id="img-card">
+                        <div class="card-body">
+                            <h3>Necessaire Azul</h3>
+                            <p></p>
+                            <button class="btn btn-primary" id="btn-finalizar">
+                                Fazer pedido
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card" data-product-id="8">
+                        <img src="img-items/WhatsApp Image 2025-09-16 at 09.51.43.jpeg" alt="" class="img-card" id="img-card">
+                        <div class="card-body">
+                            <h3>Necessaire Rosa</h3>
+                            <p></p>
+                            <button class="btn btn-primary" id="btn-finalizar">
+                                Fazer pedido
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card" data-product-id="9">
+                        <img src="img-items/WhatsApp Image 2025-09-16 at 09.51.44 (1).jpeg" alt="" class="img-card" id="img-card">
+                        <div class="card-body">
+                            <h3>Necessaire Estampada</h3>
+                            <p></p>
+                            <button class="btn btn-primary" id="btn-finalizar">
+                                Fazer pedido
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card" data-product-id="10">
+                        <img src="img-items/WhatsApp Image 2025-09-24 at 22.41.22.jpeg" alt="" class="img-card" id="img-card">
+                        <div class="card-body">
+                            <h3>Necessaire Verde</h3>
+                            <p></p>
+                            <button class="btn btn-primary" id="btn-finalizar">
+                                Fazer pedido
+                            </button>
+                            
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Fim Produtos -->
+
+        <!--sobre-->
+        <section class="sobre">
+            <!-- sobre -->
+            <section class="hero" id="sobre">
+                <div class="container">
+                    <div class="animate-fade-in">
+                        <h2 class="texth2">
+                            Sobre <span>Nós</span>
+                        </h2>
+                        <p class="text">
+                            Criamos produtos artesanais únicos com amor e dedicação para tornar seus momentos especiais ainda mais especiais
+                        </p>
+                    </div>
+                </div>
+            </section>
+            <div class="container">
+                <div class="bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl p-8 md:p-12 animate-fade-in">
+                    <div class="grid md:grid-cols-2 gap-12 items-center">
+                        <div class="text-justify font-size=1.7rem">
+                            <h3 class="font-script text-4xl text-center font-bold mb-6">Nossa História</h3>
+                            <p class="text1">
+                                Minha jornada no artesanato começou há cerca de <strong>18 anos</strong>. Desde muito cedo, sempre tive facilidade com arte e produtos manuais. Iniciei vendendo produtos simples, como vasos de flores de fuxicos de tecidos, e ao longo do tempo, explorei diversas técnicas e estilos, como pintura em madeira, vasos e forração de caixas.
+                            </p>
+                            <p class="text1">
+                                Após uma pausa na faculdade de pedagogia por conta da minha gravidez, mergulhei fundo no mundo da arte. Fui convidada a trabalhar em uma papelaria, onde pude aprofundar ainda mais meus conhecimentos e fazer grandes mudanças no setor de artesanato.
+                            </p>
+                            <p class="text1">
+                                O grande salto veio em <strong>2021</strong>, quando mudei para um local mais amplo, onde atuo até hoje. Este é o nosso lar de criatividade, um ambiente pensado para inspirar e profissionalizar.
+                            </p>
+                            <p class="text1">
+                                Mais de <strong>centenas de alunas</strong> já passaram por mim. Tenho orgulho de ter ajudado muitas pessoas a se profissionalizarem na costura, mostrando que a arte manual pode ser uma fonte de renda e um caminho transformador.
+                            </p>
+                        </div>
+                        <div class="text-center">
+                            <div class="bg-gradient-to-br from-pink-200 to-pink-300 rounded-full w-80 h-80 mx-auto flex items-center justify-center animate-float">
+                                <i></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Main Footer Content -->
+        <footer>
+            <div class="main-footer">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12" id="contato">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                        <!-- Company Info -->
+                        <div class="space-y-4">
+                            <h3 class="text-xl font-bold">Ateliê Luludovico</h3>
+                            <p class="text-black-300 text-sm leading-relaxed">
+                                Sua loja online de confiança com os melhores produtos e atendimento excepcional desde 2020.
+                            </p>
+                            <div class="space-y-2">
+                                <div class="flex items-center space-x-3">
+                                    <i class="fas fa-map-marker-alt text-blue-400"></i>
+                                    <span class="text-sm text-black-300">Av Eugenio Chavier, 222 - Mococa, SP</span>
+                                </div>
+                                <div class="flex items-center space-x-3">
+                                    <i class="fas fa-phone text-blue-400"></i>
+                                    <span class="text-sm text-black-300">(11) 9999-9999</span>
+                                </div>
+                                <div class="flex items-center space-x-3">
+                                    <i class="fas fa-envelope text-blue-400"></i>
+                                    <span class="text-sm text-black-300">contato@meuecommerce.com</span>
+                                </div>
+                            </div>
+                        </div>
+        
+                        <!-- Social Media & Payment -->
+                        <div class="space-y-4">
+                            <h4 class="text-lg font-semibold">Redes Sociais</h4>
+                            <div class="flex space-x-4">
+                                <a href="#" class="text-gray-300 hover:text-blue-400 transition-colors duration-200">
+                                    <i class="fab fa-facebook-f text-xl"></i>
+                                </a>
+                                <a href="#" class="text-gray-300 hover:text-pink-400 transition-colors duration-200">
+                                    <i class="fab fa-instagram text-xl"></i>
+                                </a>
+                                <a href="#" class="text-gray-300 hover:text-blue-400 transition-colors duration-200">
+                                    <i class="fab fa-twitter text-xl"></i>
+                                </a>
+                                <a href="#" class="text-gray-300 hover:text-red-400 transition-colors duration-200">
+                                    <i class="fab fa-youtube text-xl"></i>
+                                </a>
+                            </div>
+                            
+                            <div class="mt-6">
+                                <h5 class="text-sm font-semibold mb-3">Formas de Pagamento</h5>
+                                <div class="grid grid-cols-3 gap-2">
+                                    <div class="bg-white rounded p-2 flex items-center justify-center">
+                                        <i class="fab fa-cc-visa text-blue-600 text-lg"></i>
+                                    </div>
+                                    <div class="bg-white rounded p-2 flex items-center justify-center">
+                                        <i class="fab fa-cc-mastercard text-red-500 text-lg"></i>
+                                    </div>
+                                    <div class="bg-white rounded p-2 flex items-center justify-center">
+                                        <i class="fab fa-pix text-green-600 text-lg font-bold">PIX</i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Bottom Footer -->
+                <div class="border-t border-gray-700">
+                    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+                        <div class="flex flex-col md:flex-row items-center justify-between">
+                            <div class="text-sm text-gray-400 mb-4 md:mb-0">
+                                © 2024 MeuEcommerce. Todos os direitos reservados.
+                            </div>
+                            <div class="flex space-x-6 text-sm">
+                                <a href="#" class="text-gray-400 hover:text-white transition-colors duration-200">Política de Privacidade</a>
+                                <a href="#" class="text-gray-400 hover:text-white transition-colors duration-200">Termos de Uso</a>
+                                <a href="#" class="text-gray-400 hover:text-white transition-colors duration-200">Cookies</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </footer>
+
+        <!-- Modal para productos -->
+        <div id="product-modal" class="modal-overlay">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title" id="modal-product-title">Producto</h2>
+                    <button class="modal-close" id="modal-close">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="modal-image-container">
+                        <img id="modal-product-image" src="" alt="Producto" class="modal-main-image">
+                        <div class="modal-thumbnails" id="modal-thumbnails">
+                            </div>
+                    </div>
+                    <div class="modal-details">
+                        <p class="modal-description" id="modal-product-description"></p>
+                        <div class="modal-price" id="modal-product-price"></div>
+                        
+                        <div class="modal-options">
+                            <div class="modal-option-title">Cores:</div>
+                            <div class="modal-option-group" id="color-options">
+                                </div>
+                        </div>
+                        
+                        <div class="modal-options">
+                            <div class="modal-option-title">Personalização:</div>
+                            <div class="modal-option-group" id="customization-options">
+                                </div>
+                            <textarea id="customization-text" class="customization-input" placeholder="Descreva sua personalização (ex: nome do bebê, tipo de letra)..."></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="modal-btn modal-btn-secondary" id="modal-close-btn">Fechar</button>
+                    <button class="modal-btn modal-btn-primary" id="modal-add-to-cart">Adicionar ao Carrinho</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- LINKs -->
+        <script src="script.js"></script>
+        <script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
+        <script nomodule src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"></script>
+        <script src="https://unpkg.com/swiper@8/swiper-bundle.min.js"></script>
+        <script src="slider/slider-script.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js" integrity="sha384-ndDqU0Gzau9qJ1lfW4pNLlhNTkCfHzAVBReH9diLvGRem5+R9g2FzA8ZGN954O5Q" crossorigin="anonymous"></script>
+        <script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
+        <script nomodule src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"></script>
+        <script src="https://unpkg.com/swiper@8/swiper-bundle.min.js"></script>
+    </body>
+    </html>
