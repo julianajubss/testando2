@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Administración de Productos - Panel</title>
+    <!-- Carga de Tailwind CSS para un diseño moderno -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Iconos de Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <style>
+        /* Configuración de Fuente */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Estilos específicos para la Paleta de Colores y Listado */
+        .color-picker-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .color-circle {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: border-color 0.2s, transform 0.2s;
+        }
+        .color-circle:hover {
+            transform: scale(1.1);
+        }
+        .color-circle.selected {
+            border-color: #8B4513; /* Color Marrón más oscuro para la selección */
+            box-shadow: 0 0 0 3px rgba(139, 69, 19, 0.4);
+            transform: scale(1.2);
+        }
+        .form-control {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            box-sizing: border-box;
+            transition: border-color 0.3s;
+        }
+        .form-control:focus {
+            border-color: #8B4513; /* Enfocamos con el color principal */
+            outline: none;
+            box-shadow: 0 0 0 1px #8B4513;
+        }
+
+        /* Estilo para los ítems de la lista de productos */
+        .product-list-item {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        @media (min-width: 768px) {
+            .product-list-item {
+                flex-direction: row;
+                align-items: center;
+            }
+        }
+        .product-list-item:last-child {
+            border-bottom: none;
+        }
+        .product-list-image {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-right: 15px;
+            flex-shrink: 0;
+            margin-bottom: 10px;
+        }
+        .product-list-details {
+            flex-grow: 1;
+            margin-bottom: 10px;
+        }
+        .product-list-actions {
+            display: flex;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen p-4 md:p-8">
+
+    <!-- Contenedor Principal Centrado -->
+    <div class="max-w-4xl mx-auto">
+        <header class="text-center py-6 bg-white rounded-t-xl shadow-md mb-4">
+            <h1 class="text-3xl font-extrabold text-[#8B4513] tracking-wider">
+                Panel de Administración
+            </h1>
+            <p id="auth-status" class="text-sm text-gray-500 mt-1">
+                Autenticación Requerida
+            </p>
+        </header>
+
+        <!-- 1. SECCIÓN DE AUTENTICACIÓN (LOGIN) -->
+        <!-- Nota: Mantengo solo el login ya que el código original solo tenía el formulario de login visible -->
+        <div id="auth-section" class="bg-white p-8 rounded-xl shadow-2xl transition duration-500 ease-in-out">
+            <div class="max-w-md mx-auto">
+                <h2 id="auth-title" class="text-2xl font-bold text-gray-800 mb-6 text-center">
+                    Iniciar Sesión
+                </h2>
+                
+                <!-- Formulario de Login -->
+                <form id="login-form">
+                    <div class="mb-4">
+                        <label for="login-email" class="font-medium text-gray-700 block mb-2">Correo Electrónico</label>
+                        <input type="email" id="login-email" class="form-control" placeholder="admin@ejemplo.com" required>
+                    </div>
+                    <div class="mb-6">
+                        <label for="login-password" class="font-medium text-gray-700 block mb-2">Contraseña</label>
+                        <input type="password" id="login-password" class="form-control" placeholder="********" required>
+                    </div>
+                    <button type="submit" class="w-full py-3 bg-[#8B4513] text-white font-semibold rounded-lg hover:bg-[#6d3710] transition duration-200 shadow-md">
+                        <i class="fas fa-sign-in-alt mr-2"></i> Iniciar Sesión
+                    </button>
+                </form>
+                
+            </div>
+        </div>
+
+
+        <!-- 2. DASHBOARD DE ADMINISTRACIÓN DE PRODUCTOS (Inicialmente oculto) -->
+        <div id="admin-dashboard" class="hidden">
+            
+            <button id="logout-btn" class="mb-4 float-right py-2 px-4 text-sm bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition duration-200 shadow-sm">
+                <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+            </button>
+            <div class="clearfix"></div>
+
+            <!-- Formulario de Publicación -->
+            <div class="mb-8 p-6 border border-amber-300 bg-amber-50 rounded-xl shadow-lg">
+                <h3 class="text-2xl font-semibold text-[#8B4513] mb-6 border-b border-amber-200 pb-3">
+                    <i class="fas fa-box-open mr-2"></i> Publicar Nuevo Producto
+                </h3>
+                
+                <form id="new-product-form" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    
+                    <input type="hidden" id="product-id" name="id" value=""> 
+
+                    <div>
+                        <label class="font-medium text-gray-700 block mb-2">Título del Producto</label>
+                        <input type="text" id="product-title" name="title" class="form-control" placeholder="Ej: Cartera de Cuero Personalizada" required>
+
+                        <label class="font-medium text-gray-700 block mb-2">Precio (R$)</label>
+                        <input type="number" id="product-price" name="price" class="form-control" placeholder="199.90" step="0.01" required>
+
+                        <label class="font-medium text-gray-700 block mb-2">Colores Disponibles (Haz clic para seleccionar)</label>
+                        <div class="color-picker-group" id="color-picker">
+                            <div class="color-circle" style="background-color: #F44336;" data-color="#F44336" onclick="toggleColorSelection(this)"></div>
+                            <div class="color-circle" style="background-color: #2196F3;" data-color="#2196F3" onclick="toggleColorSelection(this)"></div>
+                            <div class="color-circle" style="background-color: #4CAF50;" data-color="#4CAF50" onclick="toggleColorSelection(this)"></div>
+                            <div class="color-circle" style="background-color: #FFEB3B;" data-color="#FFEB3B" onclick="toggleColorSelection(this)"></div>
+                            <div class="color-circle" style="background-color: #9C27B0;" data-color="#9C27B0" onclick="toggleColorSelection(this)"></div>
+                            <div class="color-circle" style="background-color: #795548;" data-color="#795548" onclick="toggleColorSelection(this)"></div>
+                            <div class="color-circle" style="background-color: #FFFFFF; border: 1px solid #ccc;" data-color="#FFFFFF" onclick="toggleColorSelection(this)"></div>
+                            <input type="hidden" id="selected-colors" name="colors" value="">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="font-medium text-gray-700 block mb-2">Descripción Corta (Max 150 caracteres)</label>
+                        <textarea id="product-short-description" name="short_description" class="form-control" rows="2" maxlength="150" placeholder="Breve resumen del producto para listados o banners." required></textarea>
+
+                        <label class="font-medium text-gray-700 block mb-2">Descripción del Producto</label>
+                        <textarea id="product-description" name="description" class="form-control" rows="5" placeholder="Detalles, materiales, y características principales." required></textarea>
+                        
+                        <label class="font-medium text-gray-700 block mb-2">Fotos del Producto (Múltiples)</label>
+                        <input type="file" id="product-photos" name="photos[]" 
+                            class="form-control p-2 bg-white" accept="image/*" multiple>
+
+                        <p class="text-xs text-gray-500 mt-1 mb-3">
+                            Sube hasta 5 imágenes. Puedes eliminarlas con la ❌ si no quieres mantenerlas.
+                        </p>
+
+                        <!-- Previsualización de fotos existentes + nuevas -->
+                        <div id="photo-preview" 
+                            class="flex gap-3 flex-wrap min-h-[60px]">
+                            <!-- Aquí se generan dinámicamente las imágenes -->
+                            <!-- Ejemplo esperado por JS:
+                            <div class="relative group w-20 h-20">
+                                <img src="/uploads/prod_abc.png" 
+                                    class="w-full h-full object-cover rounded border">
+                                <button type="button" 
+                                        class="absolute top-0 right-0 bg-red-600 text-white text-xs p-1 rounded-full opacity-80 hover:opacity-100 delete-photo-btn"
+                                        data-url="/uploads/prod_abc.png">
+                                    ❌
+                                </button>
+                            </div>
+                            -->
+                        </div>
+
+                    </div>
+                    
+                    <div class="md:col-span-2 pt-4 border-t border-amber-200">
+                        <button type="submit" id="submit-button" class="w-full py-3 bg-[#8B4513] text-white font-semibold rounded-lg hover:bg-[#6d3710] transition duration-200 shadow-lg">
+                            <i class="fas fa-cloud-upload-alt mr-2"></i> Publicar Producto
+                        </button>
+                    </div>
+                    
+                </form>
+            </div>
+
+            <!-- Listado de Productos Publicados -->
+            <div class="p-6 border border-gray-100 bg-white rounded-xl shadow-md">
+                <h3 class="text-2xl font-semibold text-gray-800 mb-6 border-b pb-3">
+                    <i class="fas fa-list-alt mr-2"></i> Mis Publicaciones Activas
+                </h3>
+                
+                <div id="published-products-list">
+                </div>
+                
+                <p class="text-center text-gray-400 p-4 mt-4 hidden" id="no-products-message">
+                    Aún no hay productos publicados.
+                </p>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="js/admin.js"></script>
+
+</body>
+</html>

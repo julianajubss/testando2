@@ -266,7 +266,117 @@
         <!-- Item Fav end -->
 
         <!-- Produtos -->
-        <div id="produtos" class="container-item"></div>
+        <div id="produtos">
+            <div id="maternidade" class="itens">
+                <div class="container-item">
+                    <div class="card" data-product-id="1">
+                        <img src="img-items/bolsa-cecilia.jpeg" alt="Bolsa Maternidade Cecília" class="img-card">
+                        <div class="card-body">
+                            <h3>Bolsa Maternidade Cecília</h3>
+                            <p>Elegancia y practicidad para la mamá moderna.</p>
+                            <button class="btn btn-primary" onclick="openModal('1'); event.stopPropagation();">
+                                Fazer pedido
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card" data-product-id="2">
+                        <img src="img-items/kit-luis-otavio.jpeg" alt="Kit Completo Luís Otávio" class="img-card">
+                        <div class="card-body">
+                            <h3>Kit Completo Luís Otávio</h3>
+                            <p>Conjunto de bolsa, cambiador y accesorios esenciales.</p>
+                            <button class="btn btn-primary" onclick="openModal('2'); event.stopPropagation();">
+                                Fazer pedido
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card" data-product-id="3">
+                        <img src="img-items/kit-lucca.jpeg" alt="Kit Completo Lucca" class="img-card">
+                        <div class="card-body">
+                            <h3>Kit Completo Lucca</h3>
+                            <p>Organización y estilo para el cuidado del recién nacido.</p>
+                            <button class="btn btn-primary" onclick="openModal('3'); event.stopPropagation();">
+                                Fazer pedido
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card" data-product-id="4">
+                        <img src="img-items/kit-lucca.jpeg" alt="Kit Completo Lucca" class="img-card">
+                        <div class="card-body">
+                            <h3>Kit Completo Lucca</h3>
+                            <p>Organización y estilo para el cuidado del recién nacido.</p>
+                            <button class="btn btn-primary" onclick="openModal('3'); event.stopPropagation();">
+                                Fazer pedido
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card" data-product-id="5">
+                        <img src="img-items/kit-lucca.jpeg" alt="Kit Completo Lucca" class="img-card">
+                        <div class="card-body">
+                            <h3>Kit Completo Lucca</h3>
+                            <p>Organización y estilo para el cuidado del recién nacido.</p>
+                            <button class="btn btn-primary" onclick="openModal('3'); event.stopPropagation();">
+                                Fazer pedido
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="necessarie" class="itens">
+                <div class="container-item">
+                    <div class="card" data-product-id="6">
+                        <img src="img-items/WhatsApp Image 2025-09-16 at 09.51.42.jpeg" alt="" class="img-card" id="img-card">
+                        <div class="card-body">
+                            <h3>Necessaire Floral</h3>
+                            <p></p>
+                            <button class="btn btn-primary" id="btn-finalizar">
+                                Fazer pedido
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card" data-product-id="7">
+                        <img src="img-items/WhatsApp Image 2025-09-24 at 22.41.21.jpeg" alt="" class="img-card" id="img-card">
+                        <div class="card-body">
+                            <h3>Necessaire Azul</h3>
+                            <p></p>
+                            <button class="btn btn-primary" id="btn-finalizar">
+                                Fazer pedido
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card" data-product-id="8">
+                        <img src="img-items/WhatsApp Image 2025-09-16 at 09.51.43.jpeg" alt="" class="img-card" id="img-card">
+                        <div class="card-body">
+                            <h3>Necessaire Rosa</h3>
+                            <p></p>
+                            <button class="btn btn-primary" id="btn-finalizar">
+                                Fazer pedido
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card" data-product-id="9">
+                        <img src="img-items/WhatsApp Image 2025-09-16 at 09.51.44 (1).jpeg" alt="" class="img-card" id="img-card">
+                        <div class="card-body">
+                            <h3>Necessaire Estampada</h3>
+                            <p></p>
+                            <button class="btn btn-primary" id="btn-finalizar">
+                                Fazer pedido
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card" data-product-id="10">
+                        <img src="img-items/WhatsApp Image 2025-09-24 at 22.41.22.jpeg" alt="" class="img-card" id="img-card">
+                        <div class="card-body">
+                            <h3>Necessaire Verde</h3>
+                            <p></p>
+                            <button class="btn btn-primary" id="btn-finalizar">
+                                Fazer pedido
+                            </button>
+                            
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
         <!-- Fim Produtos -->
 
         <!--sobre-->
@@ -440,53 +550,5 @@
         <script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
         <script nomodule src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"></script>
         <script src="https://unpkg.com/swiper@8/swiper-bundle.min.js"></script>
-        <script>
-            async function loadClientProducts() {
-                const container = document.getElementById('produtos');
-                container.innerHTML = '<p class="text-center text-gray-500">Carregando produtos...</p>';
-
-                try {
-                    const res = await fetch('php/products.php?action=list');
-                    if (!res.ok) throw new Error("Erro HTTP " + res.status);
-                    const data = await res.json();
-
-                    if (data.success && data.products.length > 0) {
-                        container.innerHTML = ''; // limpiar antes de renderizar
-                        data.products.forEach(p => {
-                            // solo la primera imagen para la lista
-                            const imgUrl = (p.image_url || '').split(',').filter(Boolean)[0] || 
-                                        'https://placehold.co/300x200?text=Sem+Imagem';
-
-                            const card = document.createElement('div');
-                            card.className = 'card';
-                            card.dataset.productId = p.id;
-
-                            card.innerHTML = `
-                                <img src="${imgUrl}" alt="${p.title}" class="img-card">
-                                <div class="card-body">
-                                    <h3>${p.title}</h3>
-                                    <p>${p.short_description || ''}</p>
-                                    <button class="btn btn-primary" onclick="openModal('${p.id}'); event.stopPropagation();">
-                                        Fazer pedido
-                                    </button>
-                                </div>
-                            `;
-
-                            container.appendChild(card);
-                        });
-                    } else {
-                        container.innerHTML = '<p class="text-center text-gray-500">Nenhum produto disponível no momento.</p>';
-                    }
-                } catch (err) {
-                    console.error(err);
-                    container.innerHTML = '<p class="text-center text-red-500">Erro ao carregar produtos.</p>';
-                }
-            }
-
-            // ejecuta cuando la página cargue
-            document.addEventListener('DOMContentLoaded', loadClientProducts);
-        </script>
-        
-
     </body>
     </html>
