@@ -1,391 +1,421 @@
-// Datos de productos (simulando una base de datos)
-        const products = {
-            1: {
-                name: "Bolsa Maternidade Cecília",
-                images: [
-                    "img-items/bolsa-cecilia.jpeg",
-                    "img-items/bordado-cecilia.jpeg",
-                    "img-items/bordado-cecilia-borboleta.jpeg"
-                ],
-                description: "Bolsa maternidade elegante y práctica con múltiples compartimentos. Ideal para llevar todos los elementos necesarios para el bebé. Fabricada con materiales de alta calidad y diseño moderno.",
-                price: "120,00",
-                colors: ["Azul", "Rosa", "Bege", "Cinza"],
-                hasCustomization: true
-            },
-            2: {
-                name: "Kit Completo Luís Otávio",
-                images: [
-                    "img-items/kit-luis-otavio.jpeg",
-                    "img-items/kit-luis-otavio-2.jpeg"
-                ],
-                description: "Kit completo para el cuidado del bebé, incluye bolsa maternidad, cambiador y accesorios. Diseño funcional y estético para padres modernos.",
-                price: "180,00",
-                colors: ["Verde", "Azul Marinho", "Amarelo"],
-                hasCustomization: true
-            },
-            3: {
-                name: "Kit Completo Lucca",
-                images: [
-                    "img-items/kit-lucca.jpeg",
-                    "img-items/kit-lucca-2.jpeg",
-                    "img-items/kit-lucca-3.jpeg"
-                ],
-                description: "Kit completo con todo lo necesario para el cuidado del bebé. Incluye bolsa, cambiador y accesorios organizados de manera práctica.",
-                price: "175,00",
-                colors: ["Azul Claro", "Branco", "Cinza Claro"],
-                hasCustomization: true
-            }
-        };
+/* script.js — catálogo cliente con backend (PHP/SQLite) */
 
-        // Carrito de compras (almacena los ítems seleccionados)
-        let cart = [];
+// ---------------------------
+// Estado global
+// ---------------------------
+let currentProduct = null; // producto cargado en el modal
+let cart = [];             // carrito en memoria
 
-        // Elementos del DOM del Modal
-        const modal = document.getElementById('product-modal');
-        const modalTitle = document.getElementById('modal-product-title');
-        const modalImage = document.getElementById('modal-product-image');
-        const modalThumbnails = document.getElementById('modal-thumbnails');
-        const modalDescription = document.getElementById('modal-product-description');
-        const modalPrice = document.getElementById('modal-product-price');
-        const colorOptions = document.getElementById('color-options');
-        const customizationOptions = document.getElementById('customization-options');
-        const customizationText = document.getElementById('customization-text');
-        const modalClose = document.getElementById('modal-close');
-        const modalCloseBtn = document.getElementById('modal-close-btn');
-        const modalAddToCart = document.getElementById('modal-add-to-cart');
-        
-        // Elementos del DOM del Carrito (dropdown)
-        const cartBtn = document.getElementById('cart-btn');
-        const cartModal = document.getElementById('cart-modal');
-        const cartBadge = document.getElementById('cart-badge');
-        const cartItemsList = document.getElementById('cart-items-list');
-        const cartTotal = document.getElementById('cart-total');
-        const cartEmpty = document.getElementById('cart-empty');
-        const checkoutBtn = document.getElementById('checkout-btn');
-        const totalPrice = document.getElementById('total-price');
+// ---------------------------
+// DOM: Modal
+// ---------------------------
+const modal              = document.getElementById('product-modal');
+const modalTitle         = document.getElementById('modal-product-title');
+const modalImage         = document.getElementById('modal-product-image');
+const modalThumbnails    = document.getElementById('modal-thumbnails');
+const modalDescription   = document.getElementById('modal-product-description');
+const modalPrice         = document.getElementById('modal-product-price');
+const colorOptions       = document.getElementById('color-options');
+const customizationOptions = document.getElementById('customization-options');
+const customizationText  = document.getElementById('customization-text');
+const modalClose         = document.getElementById('modal-close');
+const modalCloseBtn      = document.getElementById('modal-close-btn');
+const modalAddToCart     = document.getElementById('modal-add-to-cart');
 
-        // Variables de estado del producto en el modal
-        let currentProductId = null;
-        let selectedColor = null;
-        let selectedCustomization = null; // 'standard' o 'custom'
-        let customizationTextValue = "";
+// ---------------------------
+// DOM: Carrito (dropdown)
+// ---------------------------
+const cartBtn        = document.getElementById('cart-btn');
+const cartModal      = document.getElementById('cart-modal');
+const cartBadge      = document.getElementById('cart-badge');
+const cartItemsList  = document.getElementById('cart-items-list');
+const cartTotal      = document.getElementById('cart-total');
+const cartEmpty      = document.getElementById('cart-empty');
+const checkoutBtn    = document.getElementById('checkout-btn');
+const totalPrice     = document.getElementById('total-price');
 
-        /**
-         * Función para abrir el modal de un producto.
-         * @param {string} productId - ID del producto a mostrar.
-         */
-        function openModal(productId) {
-            const product = products[productId];
-            if (!product) return;
+// ---------------------------
+// Utils
+// ---------------------------
+const PRODUCTS_ENDPOINT = 'php/products.php';
 
-            // Reiniciar estado
-            currentProductId = productId;
-            selectedColor = null;
-            selectedCustomization = null;
-            customizationTextValue = "";
-            customizationText.value = "";
-            customizationText.style.display = 'none';
+function escapeHtml(str = '') {
+  return String(str)
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;');
+}
 
-            // Llenar contenido del modal
-            modalTitle.textContent = product.name;
-            modalImage.src = product.images[0];
-            modalDescription.textContent = product.description;
-            modalPrice.textContent = `R$ ${product.price}`;
-            
-            // 1. Manejar Miniaturas (Thumbnails)
-            modalThumbnails.innerHTML = '';
-            product.images.forEach((image, index) => {
-                const thumbnail = document.createElement('img');
-                thumbnail.src = image;
-                thumbnail.alt = `Miniatura ${index + 1}`;
-                thumbnail.className = 'modal-thumbnail';
-                if (index === 0) thumbnail.classList.add('active');
-                
-                thumbnail.addEventListener('click', () => {
-                    modalImage.src = image;
-                    document.querySelectorAll('.modal-thumbnail').forEach(thumb => {
-                        thumb.classList.remove('active');
-                    });
-                    thumbnail.classList.add('active');
-                });
-                
-                modalThumbnails.appendChild(thumbnail);
-            });
-            
-            // 2. Manejar Opciones de Color
-            colorOptions.innerHTML = '';
-            product.colors.forEach(color => {
-                const colorOption = createOptionElement(color, color);
-                colorOption.addEventListener('click', function() {
-                    selectOption(colorOptions, this);
-                    selectedColor = color;
-                });
-                colorOptions.appendChild(colorOption);
-            });
-            
-            // 3. Manejar Opciones de Personalización
-            customizationOptions.innerHTML = '';
-            if (product.hasCustomization) {
-                // Opción Padrão
-                const standardOption = createOptionElement("Padrão", "standard");
-                standardOption.addEventListener('click', function() {
-                    selectOption(customizationOptions, this);
-                    selectedCustomization = "standard";
-                    customizationText.style.display = 'none';
-                    customizationTextValue = "Padrão";
-                });
-                customizationOptions.appendChild(standardOption);
-                
-                // Opción Personalizado
-                const customOption = createOptionElement("Personalizado", "custom");
-                customOption.addEventListener('click', function() {
-                    selectOption(customizationOptions, this);
-                    selectedCustomization = "custom";
-                    customizationText.style.display = 'block';
-                    customizationTextValue = customizationText.value; // Mantener el valor si ya hay texto
-                });
-                customizationOptions.appendChild(customOption);
-                
-                // Evento para el campo de texto de personalización
-                customizationText.oninput = function() {
-                    customizationTextValue = this.value;
-                };
+function fmtPriceBRL(n) {
+  const num = typeof n === 'string' ? parseFloat(n.replace(',', '.')) : Number(n);
+  if (!isFinite(num)) return '0,00';
+  return num.toFixed(2).replace('.', ',');
+}
 
-            } else {
-                customizationOptions.innerHTML = '<p>Este produto não possui opções de personalização.</p>';
-                selectedCustomization = "Não aplicável";
-            }
-            
-            // Mostrar modal y bloquear scroll del cuerpo
-            modal.style.display = 'flex';
-            document.body.style.overflow = 'hidden';
-        }
+// colores comunes (pt/es) → hex
+const COLOR_MAP = {
+  'azul': '#0000ff',
+  'rosa': '#ff69b4',
+  'bege': '#f5f5dc',
+  'creme': '#f5f5dc',
+  'cinza': '#808080',
+  'verde': '#008000',
+  'amarelo': '#ffff00',
+  'branco': '#ffffff',
+  'preto': '#000000',
+  'roxo': '#800080',
+  'marrom': '#8B4513',
 
-        /**
-         * Función helper para crear elementos de opción.
-         */
-        function createOptionElement(text, value) {
-            const option = document.createElement('div');
-            option.textContent = text;
-            option.className = 'modal-option';
-            option.dataset.value = value;
-            return option;
-        }
+  // español
+  'blanco': '#ffffff',
+  'negro': '#000000',
+  'gris': '#808080',
+  'marrón': '#8B4513',
+  'morado': '#800080',
+  'amarillo': '#ffff00',
+  'verde claro': '#90ee90',
+  'azul marinho': '#000080',
+  'azul marino': '#000080',
+};
 
-        /**
-         * Función helper para manejar la selección de opciones (radio-like).
-         */
-        function selectOption(container, elementToSelect) {
-            container.querySelectorAll('.modal-option').forEach(option => {
-                option.classList.remove('selected');
-            });
-            elementToSelect.classList.add('selected');
-        }
+// normaliza token de color de la DB a HEX para pintar el circulito
+function resolveColorChip(token) {
+  if (!token) return '#ccc';
+  const t = token.trim();
+  if (t.startsWith('#')) return t;               // ya viene HEX (#F44336)
+  const key = t.toLowerCase();
+  return COLOR_MAP[key] || t;                    // nombre conocido → hex, si no, lo intentamos como CSS color
+}
 
-        /**
-         * Función para cerrar el modal.
-         */
-        function closeModal() {
-            modal.style.display = 'none';
-            document.body.style.overflow = 'auto';
-        }
+// ---------------------------
+// Cargar y renderizar cards
+// ---------------------------
+async function loadClientProducts() {
+  const container = document.getElementById('produtos');
+  if (!container) return;
+  container.innerHTML = '<p class="text-center text-gray-500">Carregando produtos...</p>';
 
-        /**
-         * Función para actualizar la interfaz del carrito.
-         */
-        function updateCartUI() {
-            // Actualizar badge
-            cartBadge.textContent = cart.length;
-            cartBadge.style.display = cart.length > 0 ? 'flex' : 'none'
-            
-            // Actualizar lista de ítems
-            cartItemsList.innerHTML = '';
-            
-            if (cart.length === 0) {
-                cartEmpty.style.display = 'block';
-                cartTotal.style.display = 'none';
-                checkoutBtn.style.display = 'none';
-            } else {
-                cartEmpty.style.display = 'none';
-                cartTotal.style.display = 'block';
-                checkoutBtn.style.display = 'block';
-                
-                let total = 0;
-                
-                cart.forEach(item => {
-                    total += parseFloat(item.price);
-                    
-                    const cartItemElement = document.createElement('div');
-                    cartItemElement.className = 'cart-item';
-                    
-                    // Formato de personalización para la visualización
-                    const customizationDisplay = item.customization === "Padrão" ? "Padrão" : "Personalizado: " + item.customization.substring(0, 30) + (item.customization.length > 30 ? '...' : '');
+  try {
+    const res = await fetch(`${PRODUCTS_ENDPOINT}?action=list`);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
 
-                    cartItemElement.innerHTML = `
-                        <div class="cart-item-info">
-                            <div class="cart-item-name">${item.name}</div>
-                            <div class="cart-item-details">
-                                Cor: ${item.color}
-                                <br> ${customizationDisplay}
-                            </div>
-                        </div>
-                        <div style="display: flex; align-items: flex-start;">
-                            <div class="cart-item-price">R$ ${item.price.toFixed(2).replace('.', ',')}</div>
-                            <i class="fas fa-times-circle cart-item-remove" data-item-id="${item.id}"></i>
-                        </div>
-                    `;
-                    
-                    cartItemsList.appendChild(cartItemElement);
-                });
-                
-                // Agregar listeners para eliminar ítems
-                document.querySelectorAll('.cart-item-remove').forEach(removeBtn => {
-                    removeBtn.addEventListener('click', function() {
-                        const itemId = parseInt(this.dataset.itemId);
-                        removeFromCart(itemId);
-                    });
-                });
+    if (!data.success || !Array.isArray(data.products) || data.products.length === 0) {
+      container.innerHTML = '<p class="text-center text-gray-500">Nenhum produto disponível no momento.</p>';
+      return;
+    }
 
-                totalPrice.textContent = total.toFixed(2).replace('.', ',');
-            }
-        }
+    container.innerHTML = '';
+    data.products.forEach(p => {
+      const imgUrl = (p.image_url || '').split(',').map(s => s.trim()).filter(Boolean)[0]
+                  || 'https://placehold.co/300x200?text=Sem+Imagem';
 
-        /**
-         * Elimina un ítem del carrito por su ID único.
-         * @param {number} itemId - ID único del ítem a eliminar.
-         */
-        function removeFromCart(itemId) {
-            cart = cart.filter(item => item.id !== itemId);
-            updateCartUI();
-        }
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.dataset.productId = p.id;
 
-        /**
-         * Función para generar el mensaje de WhatsApp.
-         */
-        function generateWhatsAppMessage() {
-            let message = "Olá! Gostaria de solicitar um orçamento para os seguintes produtos:\n\n";
-            
-            cart.forEach((item, index) => {
-                message += `${index + 1}. ${item.name}\n`;
-                message += `  > Cor: ${item.color}\n`;
-                if (item.customization && item.customization !== "Padrão") {
-                    message += `  > Personalização: ${item.customization}\n`;
-                } else {
-                    message += `  > Personalização: Padrão\n`;
-                }
-                message += `  > Preço estimado: R$ ${item.price.toFixed(2).replace('.', ',')}\n\n`;
-            });
-            
-            message += `Total Estimado: R$ ${cart.reduce((sum, item) => sum + item.price, 0).toFixed(2).replace('.', ',')}`;
-            message += "\n\nAguardamos seu contato para finalizar o pedido e confirmar o valor final!";
-            
-            return encodeURIComponent(message);
-        }
+      card.innerHTML = `
+        <img src="${imgUrl}" alt="${escapeHtml(p.title)}" class="img-card">
+        <div class="card-body">
+          <h3>${escapeHtml(p.title)}</h3>
+          <p>${escapeHtml(p.short_description || '')}</p>
+          <button class="btn btn-primary" data-open-modal="${p.id}">Fazer pedido</button>
+        </div>
+      `;
 
-        // --- Event Listeners ---
+      container.appendChild(card);
+    });
 
-        // Abrir Modal al hacer clic en cualquier tarjeta de producto
-        document.querySelectorAll('.card').forEach(card => {
-            card.addEventListener('click', function(e) {
-                // Evitar que se active si se hace clic directamente en el botón "Fazer pedido" (aunque el onclick en el HTML ya lo maneja)
-                if (!e.target.closest('.btn-primary')) {
-                    const productId = this.dataset.productId;
-                    openModal(productId);
-                }
-            });
-        });
+    // Delegación: click en botón o en la card
+    container.addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-open-modal]');
+      if (btn) {
+        e.stopPropagation();
+        openModal(btn.getAttribute('data-open-modal'));
+        return;
+      }
+      const card = e.target.closest('.card');
+      if (card) {
+        openModal(card.dataset.productId);
+      }
+    }, { once: true }); // se registra una vez; las cards ya están montadas
 
-        // Cierre del modal
-        modalClose.addEventListener('click', closeModal);
-        modalCloseBtn.addEventListener('click', closeModal);
+  } catch (err) {
+    console.error(err);
+    container.innerHTML = '<p class="text-center text-red-500">Erro ao carregar produtos.</p>';
+  }
+}
 
-        // Cierre del modal al hacer clic fuera del contenido
-        modal.addEventListener('click', function(e) {
-            if (e.target === modal) {
-                closeModal();
-            }
-        });
+// ---------------------------
+// Modal: abrir con datos reales
+// ---------------------------
+async function openModal(productId) {
+  try {
+    const res = await fetch(`${PRODUCTS_ENDPOINT}?action=get&id=${encodeURIComponent(productId)}`);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    if (!data.success || !data.product) throw new Error('Produto não encontrado');
 
-        // Agregar producto al carrito desde el modal
-        modalAddToCart.addEventListener('click', function() {
-            const product = products[currentProductId];
-            
-            // 1. Validar selección de color
-            if (!selectedColor && product.colors.length > 0) {
-                alert('Por favor, selecione uma cor.');
-                return;
-            }
-            
-            // 2. Validar selección de personalización
-            if (!selectedCustomization && product.hasCustomization) {
-                 alert('Por favor, selecione uma opção de personalização (Padrão ou Personalizado).');
-                 return;
-            }
+    currentProduct = data.product; // ¡clave! usamos esto en “Adicionar ao Carrinho”
 
-            // 3. Validar texto de personalización si es necesario
-            if (selectedCustomization === "custom" && !customizationTextValue.trim()) {
-                alert('Por favor, descreva a personalização desejada.');
-                return;
-            }
-            
-            // Crear objeto del producto para el carrito
-            const cartItem = {
-                id: Date.now(), // ID único para el ítem del carrito
-                productId: currentProductId,
-                name: product.name,
-                price: parseFloat(product.price.replace(',', '.')),
-                color: selectedColor || "Não especificada",
-                customization: selectedCustomization === "custom" ? customizationTextValue.trim() : "Padrão",
-                image: product.images[0]
-            };
-            
-            // Agregar al carrito
-            cart.push(cartItem);
-            
-            // Actualizar interfaz del carrito
-            updateCartUI();
-            
-            // Cerrar modal
-            closeModal();
-            
-            // Mostrar mensaje de confirmación
-            alert(`"${product.name}" adicionado ao carrinho!`);
-        });
+    // Reset estado
+    let selectedColor = null;
+    let selectedCustomization = null;
+    let customizationTextValue = '';
+    customizationText.value = '';
+    customizationText.style.display = 'none';
 
-        // Toggle del carrito (mostrar/ocultar)
-        cartBtn.addEventListener('click', function(e) {
-            e.stopPropagation();
-            cartModal.style.display = cartModal.style.display === 'flex' ? 'none' : 'flex';
-        });
+    // Datos base
+    modalTitle.textContent = currentProduct.title;
+    const images = (currentProduct.image_url || '').split(',').map(s => s.trim()).filter(Boolean);
+    modalImage.src = images[0] || 'https://placehold.co/400x300?text=Sem+Imagem';
+    modalDescription.textContent = currentProduct.description || currentProduct.short_description || '';
+    modalPrice.textContent = `R$ ${fmtPriceBRL(currentProduct.price)}`;
 
-        // Cerrar carrito al hacer clic fuera de él
-        document.addEventListener('click', function() {
-            if (cartModal.style.display === 'flex') {
-                cartModal.style.display = 'none';
-            }
-        });
+    // Miniaturas
+    modalThumbnails.innerHTML = '';
+    images.forEach((img, index) => {
+      const thumb = document.createElement('img');
+      thumb.src = img;
+      thumb.className = 'modal-thumbnail';
+      if (index === 0) thumb.classList.add('active');
+      thumb.addEventListener('click', () => {
+        modalImage.src = img;
+        modalThumbnails.querySelectorAll('.modal-thumbnail').forEach(t => t.classList.remove('active'));
+        thumb.classList.add('active');
+      });
+      modalThumbnails.appendChild(thumb);
+    });
 
-        // Evitar que el carrito se cierre al hacer clic dentro
-        cartModal.addEventListener('click', function(e) {
-            e.stopPropagation();
-        });
+    // Colores
+    colorOptions.innerHTML = '';
+    const colorTokens = (currentProduct.colors || '')
+      .split(',')
+      .map(s => s.trim())
+      .filter(Boolean);
 
-        // Configurar botón de checkout (WhatsApp)
-        checkoutBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            
-            if (cart.length === 0) {
-                alert('Seu carrinho está vazio.');
-                return;
-            }
-            
-            // Reemplazar con el número de teléfono real con código de país, sin '+' ni guiones
-            const phoneNumber = "55119984424479"; 
-            const message = generateWhatsAppMessage();
-            const url = `https://wa.me/${phoneNumber}?text=${message}`;
-            
-            window.open(url, '_blank');
-        });
+    colorTokens.forEach(colorToken => {
+      const hex = resolveColorChip(colorToken);
+      const row = document.createElement('div');
+      row.className = 'modal-option';
+      row.dataset.value = colorToken;
 
-        // Inicializar interfaz del carrito al cargar
-        updateCartUI();
+      const circle = document.createElement('span');
+      circle.className = 'inline-block w-6 h-6 rounded-full border mr-2';
+      circle.style.backgroundColor = hex;
+
+      const label = document.createElement('span');
+      label.textContent = colorToken; // muestra el literal (ej: "#F44336" o "Azul")
+
+      row.appendChild(circle);
+      row.appendChild(label);
+
+      row.addEventListener('click', function() {
+        selectOption(colorOptions, this);
+        selectedColor = colorToken;
+      });
+
+      colorOptions.appendChild(row);
+    });
+
+    // Personalización (simple on/off)
+    customizationOptions.innerHTML = '';
+    const standardOption = createOptionElement('Padrão', 'standard');
+    standardOption.addEventListener('click', function() {
+      selectOption(customizationOptions, this);
+      selectedCustomization = 'standard';
+      customizationText.style.display = 'none';
+      customizationTextValue = 'Padrão';
+    });
+    customizationOptions.appendChild(standardOption);
+
+    const customOption = createOptionElement('Personalizado', 'custom');
+    customOption.addEventListener('click', function() {
+      selectOption(customizationOptions, this);
+      selectedCustomization = 'custom';
+      customizationText.style.display = 'block';
+    });
+    customizationOptions.appendChild(customOption);
+
+    customizationText.oninput = function() {
+      customizationTextValue = this.value;
+    };
+
+    // Botón “Adicionar ao Carrinho”
+    modalAddToCart.onclick = function() {
+      // Validaciones (si hay colores definidos, exige elegir uno)
+      if (colorTokens.length > 0 && !selectedColor) {
+        alert('Por favor, selecione uma cor.');
+        return;
+      }
+      if (!selectedCustomization) {
+        alert('Por favor, selecione uma opção de personalização (Padrão ou Personalizado).');
+        return;
+      }
+      if (selectedCustomization === 'custom' && !customizationTextValue.trim()) {
+        alert('Por favor, descreva a personalização desejada.');
+        return;
+      }
+
+      const priceNum = typeof currentProduct.price === 'string'
+        ? parseFloat(currentProduct.price.replace(',', '.'))
+        : Number(currentProduct.price);
+
+      const cartItem = {
+        id: Date.now(),
+        productId: currentProduct.id,
+        name: currentProduct.title,
+        price: isFinite(priceNum) ? priceNum : 0,
+        color: selectedColor || 'Não especificada',
+        customization: selectedCustomization === 'custom' ? customizationTextValue.trim() : 'Padrão',
+        image: images[0] || 'https://placehold.co/100x100?text=Sem+Imagem'
+      };
+
+      cart.push(cartItem);
+      updateCartUI();
+      closeModal();
+      alert(`"${currentProduct.title}" adicionado ao carrinho!`);
+    };
+
+    // Mostrar modal
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+
+  } catch (err) {
+    console.error('Erro ao abrir modal:', err);
+  }
+}
+
+// helpers del modal
+function createOptionElement(text, value) {
+  const option = document.createElement('div');
+  option.textContent = text;
+  option.className = 'modal-option';
+  option.dataset.value = value;
+  return option;
+}
+
+function selectOption(container, elementToSelect) {
+  container.querySelectorAll('.modal-option').forEach(opt => opt.classList.remove('selected'));
+  elementToSelect.classList.add('selected');
+}
+
+function closeModal() {
+  modal.style.display = 'none';
+  document.body.style.overflow = 'auto';
+}
+
+// ---------------------------
+// Carrito
+// ---------------------------
+function updateCartUI() {
+  // badge
+  cartBadge.textContent = cart.length;
+  cartBadge.style.display = cart.length > 0 ? 'flex' : 'none';
+
+  // lista
+  cartItemsList.innerHTML = '';
+  if (cart.length === 0) {
+    cartEmpty.style.display = 'block';
+    cartTotal.style.display = 'none';
+    checkoutBtn.style.display = 'none';
+    totalPrice.textContent = '0,00';
+    return;
+  }
+
+  cartEmpty.style.display = 'none';
+  cartTotal.style.display = 'block';
+  checkoutBtn.style.display = 'block';
+
+  let total = 0;
+  cart.forEach(item => {
+    total += Number(item.price) || 0;
+
+    const el = document.createElement('div');
+    el.className = 'cart-item';
+
+    const customizationDisplay = item.customization === 'Padrão'
+      ? 'Padrão'
+      : 'Personalizado: ' + item.customization.substring(0, 30) + (item.customization.length > 30 ? '...' : '');
+
+    el.innerHTML = `
+      <div class="cart-item-info">
+        <div class="cart-item-name">${escapeHtml(item.name)}</div>
+        <div class="cart-item-details">
+          Cor: ${escapeHtml(item.color)}<br>${escapeHtml(customizationDisplay)}
+        </div>
+      </div>
+      <div style="display: flex; align-items: flex-start;">
+        <div class="cart-item-price">R$ ${fmtPriceBRL(item.price)}</div>
+        <i class="fas fa-times-circle cart-item-remove" data-item-id="${item.id}"></i>
+      </div>
+    `;
+    cartItemsList.appendChild(el);
+  });
+
+  // remover
+  cartItemsList.querySelectorAll('.cart-item-remove').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const id = Number(this.dataset.itemId);
+      cart = cart.filter(it => it.id !== id);
+      updateCartUI();
+    });
+  });
+
+  totalPrice.textContent = fmtPriceBRL(total);
+}
+
+function generateWhatsAppMessage() {
+  let message = 'Olá! Gostaria de solicitar um orçamento para os seguintes produtos:\n\n';
+  cart.forEach((item, i) => {
+    message += `${i + 1}. ${item.name}\n`;
+    message += `  > Cor: ${item.color}\n`;
+    if (item.customization && item.customization !== 'Padrão') {
+      message += `  > Personalização: ${item.customization}\n`;
+    } else {
+      message += '  > Personalização: Padrão\n';
+    }
+    message += `  > Preço estimado: R$ ${fmtPriceBRL(item.price)}\n\n`;
+  });
+  const total = cart.reduce((s, it) => s + (Number(it.price) || 0), 0);
+  message += `Total Estimado: R$ ${fmtPriceBRL(total)}\n\nAguardamos seu contato!`;
+  return encodeURIComponent(message);
+}
+
+// ---------------------------
+// Eventos globales
+// ---------------------------
+modalClose.addEventListener('click', closeModal);
+modalCloseBtn.addEventListener('click', closeModal);
+modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
+
+cartBtn.addEventListener('click', e => {
+  e.stopPropagation();
+  cartModal.style.display = cartModal.style.display === 'flex' ? 'none' : 'flex';
+});
+document.addEventListener('click', () => {
+  if (cartModal.style.display === 'flex') cartModal.style.display = 'none';
+});
+cartModal.addEventListener('click', e => e.stopPropagation());
+
+checkoutBtn.addEventListener('click', e => {
+  e.preventDefault();
+  if (cart.length === 0) {
+    alert('Seu carrinho está vazio.');
+    return;
+  }
+  const phoneNumber = '55119984424479'; // tu número
+  const url = `https://wa.me/${phoneNumber}?text=${generateWhatsAppMessage()}`;
+  window.open(url, '_blank');
+});
+
+// expone openModal si en el HTML lo invocas por onclick
+window.openModal = openModal;
+
+// boot
+document.addEventListener('DOMContentLoaded', () => {
+  loadClientProducts();
+  updateCartUI();
+});
